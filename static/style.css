@@ -1,0 +1,51 @@
+body {
+    font-family: sans;
+}
+
+header {
+    padding: 0.5em;
+}
+header img, header h1 {
+    display: inline-block;
+    vertical-align: middle;
+}
+header img.brand {
+    width: 4em;
+}
+header h1 {
+    font-size: 1.8em;
+    margin-left: 0.6em;
+    color: #922;
+    cursor: default;
+}
+header {
+    border-bottom: 1px dotted #333;
+}
+
+
+article {
+    padding: 0.3em;
+}
+
+article .boxes {
+    width: 100%;
+}
+article .boxes td {
+    border: 1px solid black;
+    vertical-align: top;
+}
+article .boxes td {
+    padding: 0;
+}
+
+article .boxlabel {
+    float: left;
+    position: absolute;
+    font: 1em monospace;
+    padding: 0.1em;
+    padding-right: 0.3em;
+    padding-left: 0.3em;
+    cursor: default;
+    color: white;
+    background: #000;
+}
