@@ -1,11 +1,14 @@
 (function () {
   "use strict";
 
-  function Plot3D(selStr, targKey) {
+  function Plot3D(selStr, targKey, options) {
     let obj = {}
     let sel = d3.select(selStr)
     let width = +sel.attr("width")
     let height = +sel.attr("height")
+
+    options = options || {}
+    options.color = options.color || "#00f"
 
     /* isometric projection data */
     const scale = width * 0.2
@@ -79,7 +82,7 @@
           .attr("r", 6)
           .attr("fill", "none")
 
-      let color = d3.interpolateRgb("rgba(255,255,255,0)", "blue")
+      let color = d3.interpolateRgb("rgba(255,255,255,0)", options.color)
       upd = upd.merge(ent)
         .attr("cx", function (d,i) { return p2d(d)[0] })
         .attr("cy", function (d,i) { return p2d(d)[1] })
@@ -133,7 +136,7 @@
 
     options = options || {}
     options.color = options.color || "#f00";
-    options.color2 = options.color2 || d3.color(options.color).brighter()
+    options.color2 = options.color2 || d3.color(options.color)
 
     {
       let midPath = d3.path()
@@ -149,14 +152,14 @@
     let dataGroup = sel.append("g")
     let dataLine = sel.append("path")
         .attr("fill", "none")
-        .attr("stroke", "#f44")
+        .attr("stroke", options.color2)
 
     let pad = 10;
     function posX(i) {
       return pad + (width - pad*2) * i / (maxData - 1)
     }
     function posY(d) {
-      return pad + (height - pad*2) * (d + 1) / 2
+      return pad + (height - pad*2) * (1 - d) / 2
     }
 
     function drawData() {
@@ -194,8 +197,10 @@
   }
 
   window.addEventListener("load", function () {
-    let plot3d = Plot3D("#xyz3d", "pos")
-    let plotX = Plot2D("#x2d", "x")
+    let plot3d = Plot3D("#xyz3d", "pos", { color: "#909" })
+    let plotX = Plot2D("#x2d", "x", { color: "#f00" })
+    let plotY = Plot2D("#y2d", "y", { color: "#00f" })
+    let plotZ = Plot2D("#z2d", "z", { color: "#fc0" })
 
     let start = new Date
     setInterval(function () {
@@ -208,7 +213,9 @@
       }
       plot3d.data("pos", pos)
       plotX.data("x", pos.x)
-    }, 300)
+      plotY.data("y", pos.y)
+      plotZ.data("z", pos.z)
+    }, 200)
   }, false)
 
 })();
