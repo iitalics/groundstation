@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  function Plot3D(selStr, keys) {
+  function Plot3D(selStr, targKey) {
     let obj = {}
     let sel = d3.select(selStr)
     let width = +sel.attr("width")
@@ -93,18 +93,13 @@
         dataPts.shift()
       drawData()
     }
-    let incomingData = {}
     obj.data = function(key, val) {
-      if (key === "x") incomingData.x = val
-      if (key === "y") incomingData.y = val
-      if (key === "z") incomingData.z = val
-
-      let curKeys = Object.keys(incomingData)
-      if (curKeys.includes("x")
-          && curKeys.includes("y")
-          && curKeys.includes("z")) {
-        recieveDataPoint(incomingData)
-        incomingData = {}
+      let valKeys = Object.keys(val)
+      if (key === targKey
+          && valKeys.includes("x")
+          && valKeys.includes("y")
+          && valKeys.includes("z")) {
+        recieveDataPoint(val)
       }
     }
 
@@ -116,7 +111,6 @@
         x: d3.mouse(sel.node())[0],
       }
     })
-
     d3.select("body").on("mouseup", function() { drag = null })
     d3.select("body").on("mousemove", function() {
       if (drag) {
@@ -127,19 +121,37 @@
       }
     })
 
+    return obj
+  }
+
+
+  function Plot2D(selStr, key) {
+    let obj = {}
+    let sel = d3.select(selStr)
+    let width = +sel.attr("width")
+    let height = +sel.attr("height")
+
+    obj.data = function(key, val) {
+    }
 
     return obj
   }
 
   window.addEventListener("load", function () {
-    let example = Plot3D("#display3d", ["x","y","z"])
+    let plot3d = Plot3D("#xyz3d", "pos")
+    let plotX = Plot2D("#x2d", "x")
+
     let start = new Date
     setInterval(function () {
       let now = new Date
       let dt = (now - start) / 1000
-      example.data("x", Math.sin(dt))
-      example.data("y", Math.cos(dt * 2))
-      example.data("z", Math.cos(dt * 1.5 + 2))
+      let pos = {
+        x: Math.sin(dt),
+        y: Math.cos(dt * 2),
+        z: Math.cos(dt * 1.5 + 2),
+      }
+      plot3d.data("pos", pos)
+      plotX.data("x", pos.x)
     }, 100)
   }, false)
 
