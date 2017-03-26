@@ -1,8 +1,7 @@
 (function () {
   "use strict";
 
-  function Plot3D(selStr, targKey, options) {
-    let obj = {}
+  function Plot3D(selStr, options) {
     let sel = d3.select(selStr)
     let width = +sel.attr("width")
     let height = +sel.attr("height")
@@ -85,23 +84,6 @@
         .attr("fill", function (d,i) { return color(i/maxData) })
     }
 
-    /* waiting for & recieving data points */
-    function recieveDataPoint(o) {
-      dataPts.push([o.x, o.y, o.z])
-      if (dataPts.length > maxData)
-        dataPts.shift()
-      drawData()
-    }
-    obj.data = function(key, val) {
-      let valKeys = Object.keys(val)
-      if (key === targKey
-          && valKeys.includes("x")
-          && valKeys.includes("y")
-          && valKeys.includes("z")) {
-        recieveDataPoint(val)
-      }
-    }
-
     /* allow dragging the axis */
     let drag = null
     sel.on("mousedown", function() {
@@ -119,11 +101,18 @@
         drawData()
       }
     })
-    return obj
+
+    /* recieving data points */
+    return function(key, val) {
+      dataPts.push([val.x, val.y, val.z])
+      if (dataPts.length > maxData)
+        dataPts.shift()
+      drawData()
+    }
   }
 
 
-  function Plot2D(selStr, targKey, options) {
+  function Plot2D(selStr, options) {
     let obj = {}
     let sel = d3.select(selStr)
     let width = +sel.attr("width")
@@ -132,6 +121,7 @@
     options = options || {}
     options.color = options.color || "#f00";
     options.color2 = options.color2 || d3.color(options.color)
+    options.key = options.key || "val";
 
     {
       let midPath = d3.path()
@@ -190,25 +180,74 @@
     return obj
   }
 
+
+  /**** sink combinators ****/
+
+  function Split(...args) {
+    let sinks = []
+    function getSinks(sink) {
+      if (Array.isArray(sink))
+        sink.forEach(getSinks)
+      else
+        sinks.push(sink)
+    }
+    getSinks(args)
+    return function(key, val) {
+      sinks.map(s => s(key, val))
+    }
+  }
+
+  function Filter(filt, sink) {
+    let pred
+    if (filt instanceof Function)
+      pred = filt
+    else if (Array.isArray(filt))
+      pred = (k => filt.includes(k))
+    else
+      pred = (k => (k == filt))
+
+    return function(key, val) {
+      if (pred(key))
+        sink(key, val)
+    }
+  }
+
+  function Group(keys, newKey, sink) {
+    let incoming = {}
+    return function(key, val) {
+      if (keys.includes(key)) {
+        incoming[key] = val
+        if (Object.keys(incoming).length === keys.length) {
+          sink(newKey, incoming)
+          incoming = {}
+        }
+      }
+    }
+  }
+
+
+  /**** main ****/
+
   window.addEventListener("load", function () {
-    let plot3d = Plot3D("#xyz3d", "pos", { color: "#909" })
-    let plotX = Plot2D("#x2d", "x", { color: "#f00" })
-    let plotY = Plot2D("#y2d", "y", { color: "#00f" })
-    let plotZ = Plot2D("#z2d", "z", { color: "#fc0" })
+    let plot3d = Plot3D("#xyz3d", { key: "pos", color: "#909" })
+    let plotX = Plot2D("#x2d", { key: "x", color: "#f00" })
+    let plotY = Plot2D("#y2d", { key: "y", color: "#00f" })
+    let plotZ = Plot2D("#z2d", { key: "z", color: "#fc0" })
+
+    let sink = Split(
+      Filter("x", plotX),
+      Filter("y", plotY),
+      Filter("z", plotZ,
+      Group(["x", "y", "z"], "pos", plot3d)
+    )
 
     let start = new Date
     setInterval(function () {
       let now = new Date
       let dt = (now - start) / 1000
-      let pos = {
-        x: Math.sin(dt),
-        y: Math.cos(dt * 2),
-        z: Math.cos(dt * 1.5 + 2),
-      }
-      plot3d.data("pos", pos)
-      plotX.data("x", pos.x)
-      plotY.data("y", pos.y)
-      plotZ.data("z", pos.z)
+      sink.data("x", Math.sin(dt))
+      sink.data("y", Math.cos(dt * 2))
+      sink.data("z", Math.cos(dt * 1.5 + 2))
     }, 200)
   }, false)
 
