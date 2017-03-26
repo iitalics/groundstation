@@ -1,13 +1,19 @@
 (function () {
   "use strict";
 
-  function Plot3D(selStr, keys) {
+  function Plot3D(selStr, targKey, options) {
     let obj = {}
     let sel = d3.select(selStr)
     let width = +sel.attr("width")
     let height = +sel.attr("height")
 
-    /* 3d projection */
+<<<<<<< HEAD
+=======
+    options = options || {}
+    options.color = options.color || "#00f"
+
+    /* isometric projection data */
+>>>>>>> plot-drawing
     const scale = width * 0.2
     const origX = width / 2
     const origY = height / 2
@@ -75,7 +81,7 @@
           .attr("r", 6)
           .attr("fill", "none")
 
-      let color = d3.interpolateRgb("rgba(255,255,255,0)", "blue")
+      let color = d3.interpolateRgb("rgba(255,255,255,0)", options.color)
       upd = upd.merge(ent)
         .attr("cx", function (d,i) { return p2d(d)[0] })
         .attr("cy", function (d,i) { return p2d(d)[1] })
@@ -89,18 +95,13 @@
         dataPts.shift()
       drawData()
     }
-    let incomingData = {}
     obj.data = function(key, val) {
-      if (key === "x") incomingData.x = val
-      if (key === "y") incomingData.y = val
-      if (key === "z") incomingData.z = val
-
-      let curKeys = Object.keys(incomingData)
-      if (curKeys.includes("x")
-          && curKeys.includes("y")
-          && curKeys.includes("z")) {
-        recieveDataPoint(incomingData)
-        incomingData = {}
+      let valKeys = Object.keys(val)
+      if (key === targKey
+          && valKeys.includes("x")
+          && valKeys.includes("y")
+          && valKeys.includes("z")) {
+        recieveDataPoint(val)
       }
     }
 
@@ -112,7 +113,6 @@
         x: d3.mouse(sel.node())[0],
       }
     })
-
     d3.select("body").on("mouseup", function() { drag = null })
     d3.select("body").on("mousemove", function() {
       if (drag) {
@@ -123,19 +123,101 @@
       }
     })
 
+<<<<<<< HEAD
+=======
+    return obj
+  }
+
+
+  function Plot2D(selStr, targKey, options) {
+    let obj = {}
+    let sel = d3.select(selStr)
+    let width = +sel.attr("width")
+    let height = +sel.attr("height")
+
+    options = options || {}
+    options.color = options.color || "#f00";
+    options.color2 = options.color2 || d3.color(options.color)
+
+    {
+      let midPath = d3.path()
+      midPath.moveTo(0, height / 2)
+      midPath.lineTo(width, height / 2)
+      sel.append("path")
+        .attr("d", midPath)
+        .attr("stroke", "#888")
+    }
+
+    let dataPts = []
+    let maxData = 20
+    let dataGroup = sel.append("g")
+    let dataLine = sel.append("path")
+        .attr("fill", "none")
+        .attr("stroke", options.color2)
+
+    let pad = 10;
+    function posX(i) {
+      return pad + (width - pad*2) * i / (maxData - 1)
+    }
+    function posY(d) {
+      return pad + (height - pad*2) * (1 - d) / 2
+    }
+
+    function drawData() {
+      let upd = dataGroup.selectAll(".dp").data(dataPts)
+
+      let ent = upd.enter()
+        .append("circle")
+          .classed("dp", true)
+          .attr("fill", options.color)
+        .attr("r", 3)
+      upd = upd.merge(ent)
+        .attr("cx", function(d,i) { return posX(i) })
+        .attr("cy", function(d,i) { return posY(d) })
+
+      let path = d3.path()
+      for (let i = 0; i < dataPts.length; i++) {
+        if (i === 0)
+          path.moveTo(posX(i), posY(dataPts[i]))
+        else
+          path.lineTo(posX(i), posY(dataPts[i]))
+      }
+      dataLine.attr("d", path)
+    }
+
+    obj.data = function(key, val) {
+      if (key === targKey) {
+        dataPts.push(val)
+        if (dataPts.length > maxData)
+          dataPts.shift()
+        drawData()
+      }
+    }
+
+>>>>>>> plot-drawing
     return obj
   }
 
   window.addEventListener("load", function () {
-    let example = Plot3D("#display3d", ["x","y","z"])
+    let plot3d = Plot3D("#xyz3d", "pos", { color: "#909" })
+    let plotX = Plot2D("#x2d", "x", { color: "#f00" })
+    let plotY = Plot2D("#y2d", "y", { color: "#00f" })
+    let plotZ = Plot2D("#z2d", "z", { color: "#fc0" })
+
     let start = new Date
     setInterval(function () {
       let now = new Date
       let dt = (now - start) / 1000
-      example.data("x", Math.sin(dt))
-      example.data("y", Math.cos(dt * 2))
-      example.data("z", Math.cos(dt * 1.5 + 2))
-    }, 100)
+      let pos = {
+        x: Math.sin(dt),
+        y: Math.cos(dt * 2),
+        z: Math.cos(dt * 1.5 + 2),
+      }
+      plot3d.data("pos", pos)
+      plotX.data("x", pos.x)
+      plotY.data("y", pos.y)
+      plotZ.data("z", pos.z)
+    }, 200)
   }, false)
 
 })();
