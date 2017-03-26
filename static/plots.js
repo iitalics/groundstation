@@ -121,7 +121,6 @@
     options = options || {}
     options.color = options.color || "#f00";
     options.color2 = options.color2 || d3.color(options.color)
-    options.key = options.key || "val";
 
     {
       let midPath = d3.path()
@@ -169,15 +168,12 @@
       dataLine.attr("d", path)
     }
 
-    obj.data = function(key, val) {
-      if (key === targKey) {
-        dataPts.push(val)
-        if (dataPts.length > maxData)
-          dataPts.shift()
-        drawData()
-      }
+    return function(key, val) {
+      dataPts.push(val)
+      if (dataPts.length > maxData)
+        dataPts.shift()
+      drawData()
     }
-    return obj
   }
 
 
@@ -237,17 +233,17 @@
     let sink = Split(
       Filter("x", plotX),
       Filter("y", plotY),
-      Filter("z", plotZ,
+      Filter("z", plotZ),
       Group(["x", "y", "z"], "pos", plot3d)
     )
 
-    let start = new Date
+    let start = new Date()
     setInterval(function () {
-      let now = new Date
+      let now = new Date()
       let dt = (now - start) / 1000
-      sink.data("x", Math.sin(dt))
-      sink.data("y", Math.cos(dt * 2))
-      sink.data("z", Math.cos(dt * 1.5 + 2))
+      sink("x", Math.sin(dt))
+      sink("y", Math.cos(dt * 2))
+      sink("z", Math.cos(dt * 1.5 + 2))
     }, 200)
   }, false)
 
