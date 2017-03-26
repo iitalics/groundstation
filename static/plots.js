@@ -7,13 +7,10 @@
     let width = +sel.attr("width")
     let height = +sel.attr("height")
 
-<<<<<<< HEAD
-=======
     options = options || {}
     options.color = options.color || "#00f"
 
     /* isometric projection data */
->>>>>>> plot-drawing
     const scale = width * 0.2
     const origX = width / 2
     const origY = height / 2
@@ -122,9 +119,6 @@
         drawData()
       }
     })
-
-<<<<<<< HEAD
-=======
     return obj
   }
 
@@ -193,8 +187,6 @@
         drawData()
       }
     }
-
->>>>>>> plot-drawing
     return obj
   }
 
