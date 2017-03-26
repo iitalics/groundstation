@@ -125,8 +125,8 @@
     })
     sel.on("mousemove", function() {
       if (drag) {
-        let dx = d3.mouse(sel.node())[0] - drag.x;
-        proj3AngleY = drag.rot + dx * 0.03;
+        let dx = d3.mouse(sel.node())[0] - drag.x
+        proj3AngleY = drag.rot + dx * 0.03
         redrawAxis()
         drawData()
       }
