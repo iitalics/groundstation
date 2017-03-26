@@ -7,6 +7,7 @@
     let width = +sel.attr("width")
     let height = +sel.attr("height")
 
+    /* isometric projection data */
     const scale = width * 0.2
     const origX = width / 2
     const origY = height / 2
@@ -14,16 +15,17 @@
     let proj2 = function() {
       return [ [1,0], [0,-1], [-.57, .62] ]
     }
-    let proj3_angle_y = 0;
+    let proj3AngleY = 0;
     let proj3 = function() {
-      let C = Math.cos(proj3_angle_y);
-      let S = Math.sin(proj3_angle_y);
+      let C = Math.cos(proj3AngleY);
+      let S = Math.sin(proj3AngleY);
       return [
         [C,0,-S],
         [0,1,0],
         [S,0,C] ]
     }
 
+    /* convert 3d point to 2d point */
     function p2d(vec) {
       let p3 = proj3()
       let x3 = vec[0] * p3[0][0] + vec[1] * p3[1][0] + vec[2] * p3[2][0]
@@ -35,20 +37,18 @@
       return [x,y]
     }
 
-    let bg;
-
-    function resetAxis () {
-      if (bg) {
-        bg.remove();
+    /* draw the axis */
+    let axis;
+    function redrawAxis () {
+      if (axis) {
+        axis.remove();
       }
-      bg = sel.append("g");
+      axis = sel.append("g");
 
       let faces = [
         [ [-1,-1,-1], [1,-1,-1], [1,-1,1], [-1,-1,1] ],
         [ [-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1] ],
         [ [-1,-1,-1], [-1,1,-1], [-1,1,1], [-1,-1,1] ],
-        [ [-1,1,-1], [1,1,-1], [1,1,1], [-1,1,1] ],
-        [ [1,-1,-1], [1,1,-1], [1,1,1], [1,-1,1] ],
       ]
 
       let path = d3.path();
@@ -61,24 +61,77 @@
         }
       }
 
-      bg.append("path")
+      axis.append("path")
         .attr("d", path)
         .attr("fill", "none")
         .attr("stroke", "#555")
         .attr("stroke-width", 2)
     }
+    redrawAxis()
 
-    resetAxis()
+    /* drawing data points */
+    let dataPts = []
+    let dataGroup = sel.append("g")
+    let maxData = 12;
+    function drawData() {
+      let upd = dataGroup.selectAll(".dp")
+          .data(dataPts);
 
-    let start = new Date;
-    setInterval(function () {
-      let ang = (new Date() - start) / 1000
-      proj3_angle_y = ang;
-      resetAxis()
-    }, 100);
+      let ent = upd.enter()
+          .append("circle")
+          .classed("dp", true)
+          .attr("r", 6)
+          .attr("fill", "none")
 
-    obj.data = function(key, val) {
+      let color = d3.interpolateRgb("rgba(255,255,255,0)", "blue");
+      upd = upd.merge(ent)
+        .attr("cx", function (d,i) { return p2d(d)[0] })
+        .attr("cy", function (d,i) { return p2d(d)[1] })
+        .attr("stroke", function (d,i) { return color(i/maxData); })
     }
+
+    /* waiting for & recieving data points */
+    function recieveDataPoint(o) {
+      dataPts.push([o.x, o.y, o.z])
+      if (dataPts.length > maxData)
+        dataPts.shift()
+      drawData()
+    }
+    let incomingData = {};
+    obj.data = function(key, val) {
+      if (key === "x") incomingData.x = val
+      if (key === "y") incomingData.y = val
+      if (key === "z") incomingData.z = val
+
+      let curKeys = Object.keys(incomingData);
+      if (curKeys.includes("x")
+          && curKeys.includes("y")
+          && curKeys.includes("z")) {
+        recieveDataPoint(incomingData)
+        incomingData = {}
+      }
+    }
+
+    /* allow dragging the axis */
+    let drag = null;
+    sel.on("mousedown", function() {
+      drag = {
+        rot: proj3AngleY,
+        x: d3.mouse(sel.node())[0],
+      }
+    })
+    sel.on("mouseup", function() {
+      drag = null
+    })
+    sel.on("mousemove", function() {
+      if (drag) {
+        let dx = d3.mouse(sel.node())[0] - drag.x;
+        proj3AngleY = drag.rot + dx * 0.03;
+        redrawAxis()
+        drawData()
+      }
+    })
+
 
     return obj
   }
@@ -92,7 +145,7 @@
       example.data("x", Math.sin(dt));
       example.data("y", Math.cos(dt * 2));
       example.data("z", Math.cos(dt * 1.5 + 2));
-    }, 500);
+    }, 100);
   }, false);
 
 })();
