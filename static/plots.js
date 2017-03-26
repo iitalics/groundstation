@@ -38,12 +38,12 @@
     }
 
     /* draw the axis */
-    let axis;
+    let axis = sel.append("g");
+    axis.append("path")
+        .attr("fill", "none")
+        .attr("stroke", "#555")
+        .attr("stroke-width", 2);
     function redrawAxis () {
-      if (axis) {
-        axis.remove();
-      }
-      axis = sel.append("g");
 
       let faces = [
         [ [-1,-1,-1], [1,-1,-1], [1,-1,1], [-1,-1,1] ],
@@ -61,11 +61,7 @@
         }
       }
 
-      axis.append("path")
-        .attr("d", path)
-        .attr("fill", "none")
-        .attr("stroke", "#555")
-        .attr("stroke-width", 2)
+      axis.sel("path").attr("d", path)
     }
     redrawAxis()
 
