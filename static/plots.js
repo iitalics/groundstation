@@ -38,11 +38,11 @@
     }
 
     /* draw the axis */
-    let axis = sel.append("g");
+    let axis = sel.append("g")
     axis.append("path")
         .attr("fill", "none")
         .attr("stroke", "#555")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
     function redrawAxis () {
 
       let faces = [
@@ -61,7 +61,7 @@
         }
       }
 
-      axis.sel("path").attr("d", path)
+      axis.select("path").attr("d", path)
     }
     redrawAxis()
 
