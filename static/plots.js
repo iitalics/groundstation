@@ -15,10 +15,10 @@
     let proj2 = function() {
       return [ [1,0], [0,-1], [-.57, .62] ]
     }
-    let proj3AngleY = 0;
+    let proj3AngleY = 0
     let proj3 = function() {
-      let C = Math.cos(proj3AngleY);
-      let S = Math.sin(proj3AngleY);
+      let C = Math.cos(proj3AngleY)
+      let S = Math.sin(proj3AngleY)
       return [
         [C,0,-S],
         [0,1,0],
@@ -51,7 +51,7 @@
         [ [-1,-1,-1], [-1,1,-1], [-1,1,1], [-1,-1,1] ],
       ]
 
-      let path = d3.path();
+      let path = d3.path()
       for (let face of faces) {
         let r = p2d(face[0])
         path.moveTo(r[0], r[1])
@@ -68,10 +68,10 @@
     /* drawing data points */
     let dataPts = []
     let dataGroup = sel.append("g")
-    let maxData = 12;
+    let maxData = 12
     function drawData() {
       let upd = dataGroup.selectAll(".dp")
-          .data(dataPts);
+          .data(dataPts)
 
       let ent = upd.enter()
           .append("circle")
@@ -79,11 +79,11 @@
           .attr("r", 6)
           .attr("fill", "none")
 
-      let color = d3.interpolateRgb("rgba(255,255,255,0)", "blue");
+      let color = d3.interpolateRgb("rgba(255,255,255,0)", "blue")
       upd = upd.merge(ent)
         .attr("cx", function (d,i) { return p2d(d)[0] })
         .attr("cy", function (d,i) { return p2d(d)[1] })
-        .attr("stroke", function (d,i) { return color(i/maxData); })
+        .attr("stroke", function (d,i) { return color(i/maxData) })
     }
 
     /* waiting for & recieving data points */
@@ -93,13 +93,13 @@
         dataPts.shift()
       drawData()
     }
-    let incomingData = {};
+    let incomingData = {}
     obj.data = function(key, val) {
       if (key === "x") incomingData.x = val
       if (key === "y") incomingData.y = val
       if (key === "z") incomingData.z = val
 
-      let curKeys = Object.keys(incomingData);
+      let curKeys = Object.keys(incomingData)
       if (curKeys.includes("x")
           && curKeys.includes("y")
           && curKeys.includes("z")) {
@@ -109,7 +109,7 @@
     }
 
     /* allow dragging the axis */
-    let drag = null;
+    let drag = null
     sel.on("mousedown", function() {
       drag = {
         rot: proj3AngleY,
@@ -133,15 +133,15 @@
   }
 
   window.addEventListener("load", function () {
-    let example = Plot3D("#display3d", ["x","y","z"]);
-    let start = new Date;
+    let example = Plot3D("#display3d", ["x","y","z"])
+    let start = new Date
     setInterval(function () {
-      let now = new Date;
-      let dt = (now - start) / 1000;
-      example.data("x", Math.sin(dt));
-      example.data("y", Math.cos(dt * 2));
-      example.data("z", Math.cos(dt * 1.5 + 2));
-    }, 100);
-  }, false);
+      let now = new Date
+      let dt = (now - start) / 1000
+      example.data("x", Math.sin(dt))
+      example.data("y", Math.cos(dt * 2))
+      example.data("z", Math.cos(dt * 1.5 + 2))
+    }, 100)
+  }, false)
 
 })();
