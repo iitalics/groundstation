@@ -8,9 +8,15 @@
       ["x", "y", "z"],
       sink.Split([
         Plot3D("#xyz3d", { color: "#909" }),
+
         sink.Key("x", Plot2D("#x2d", { color: "#f00" })),
         sink.Key("y", Plot2D("#y2d", { color: "#00f" })),
         sink.Key("z", Plot2D("#z2d", { color: "#fc0" })),
+
+        function(obj) {
+          if (debug)
+            console.log(obj)
+        },
       ]))
 
     let start = new Date()
