@@ -103,7 +103,7 @@
     })
 
     /* recieving data points */
-    return function(key, val) {
+    return function(val) {
       dataPts.push([val.x, val.y, val.z])
       if (dataPts.length > maxData)
         dataPts.shift()
@@ -168,7 +168,7 @@
       dataLine.attr("d", path)
     }
 
-    return function(key, val) {
+    return function(val) {
       dataPts.push(val)
       if (dataPts.length > maxData)
         dataPts.shift()
@@ -188,34 +188,38 @@
         sinks.push(sink)
     }
     getSinks(args)
-    return function(key, val) {
-      sinks.map(s => s(key, val))
+    return function(val) {
+      sinks.forEach(s => s(val))
     }
   }
 
-  function Filter(filt, sink) {
-    let pred
-    if (filt instanceof Function)
-      pred = filt
-    else if (Array.isArray(filt))
-      pred = (k => filt.includes(k))
-    else
-      pred = (k => (k == filt))
-
-    return function(key, val) {
-      if (pred(key))
-        sink(key, val)
+  function Key(key, sink) {
+    return function(obj) {
+      if (Object.keys(obj).includes(key))
+        sink(obj[key])
     }
   }
 
-  function Group(keys, newKey, sink) {
-    let incoming = {}
-    return function(key, val) {
-      if (keys.includes(key)) {
-        incoming[key] = val
-        if (Object.keys(incoming).length === keys.length) {
-          sink(newKey, incoming)
-          incoming = {}
+  function Sequence(keys, sink) {
+    if (typeof keys === "number") {
+      let vals = []
+      return function(val) {
+        vals.push(val)
+        if (vals.length === keys) {
+          sink(vals)
+          vals = []
+        }
+      }
+    }
+    else {
+      let i = 0
+      let obj = {}
+      return function(val) {
+        obj[keys[i++]] = val
+        if (i >= keys.length) {
+          sink(obj)
+          obj = {}
+          i = 0
         }
       }
     }
@@ -230,20 +234,22 @@
     let plotY = Plot2D("#y2d", { key: "y", color: "#00f" })
     let plotZ = Plot2D("#z2d", { key: "z", color: "#fc0" })
 
-    let sink = Split(
-      Filter("x", plotX),
-      Filter("y", plotY),
-      Filter("z", plotZ),
-      Group(["x", "y", "z"], "pos", plot3d)
-    )
+    let sink = Sequence(
+      ["x", "y", "z"],
+      Split([
+        Key("x", plotX),
+        Key("y", plotY),
+        Key("z", plotZ),
+        plot3d,
+      ]))
 
     let start = new Date()
     setInterval(function () {
       let now = new Date()
       let dt = (now - start) / 1000
-      sink("x", Math.sin(dt))
-      sink("y", Math.cos(dt * 2))
-      sink("z", Math.cos(dt * 1.5 + 2))
+      sink(Math.sin(dt))
+      sink(Math.cos(dt * 2))
+      sink(Math.cos(dt * 1.5 + 2))
     }, 200)
   }, false)
 
