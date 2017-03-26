@@ -7,22 +7,18 @@
     let width = +sel.attr("width")
     let height = +sel.attr("height")
 
-    /* isometric projection data */
+    /* 3d projection */
     const scale = width * 0.2
     const origX = width / 2
     const origY = height / 2
-
-    let proj2 = function() {
-      return [ [1,0], [0,-1], [-.57, .62] ]
-    }
-    let proj3AngleY = 0
+    let proj3AngleY = -Math.PI / 4
     let proj3 = function() {
-      let C = Math.cos(proj3AngleY)
-      let S = Math.sin(proj3AngleY)
+      let yc = Math.cos(proj3AngleY)
+      let ys = Math.sin(proj3AngleY)
       return [
-        [C,0,-S],
-        [0,1,0],
-        [S,0,C] ]
+        [yc, 0, -ys],
+        [0,  1,  0],
+        [ys, 0,  yc] ]
     }
 
     /* convert 3d point to 2d point */
@@ -31,9 +27,9 @@
       let x3 = vec[0] * p3[0][0] + vec[1] * p3[1][0] + vec[2] * p3[2][0]
       let y3 = vec[0] * p3[0][1] + vec[1] * p3[1][1] + vec[2] * p3[2][1]
       let z3 = vec[0] * p3[0][2] + vec[1] * p3[1][2] + vec[2] * p3[2][2]
-      let p2 = proj2()
-      let x = origX + scale * (x3 * p2[0][0] + y3 * p2[1][0] + z3 * p2[2][0])
-      let y = origY + scale * (x3 * p2[0][1] + y3 * p2[1][1] + z3 * p2[2][1])
+      let t = scale * 5 / (4 - z3);
+      let x = origX + x3 * t;
+      let y = origY - y3 * t;
       return [x,y]
     }
 
@@ -126,7 +122,6 @@
         drawData()
       }
     })
-
 
     return obj
   }
