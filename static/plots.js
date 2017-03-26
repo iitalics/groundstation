@@ -83,7 +83,7 @@
       upd = upd.merge(ent)
         .attr("cx", function (d,i) { return p2d(d)[0] })
         .attr("cy", function (d,i) { return p2d(d)[1] })
-        .attr("stroke", function (d,i) { return color(i/maxData) })
+        .attr("fill", function (d,i) { return color(i/maxData) })
     }
 
     /* waiting for & recieving data points */
@@ -116,13 +116,12 @@
         x: d3.mouse(sel.node())[0],
       }
     })
-    sel.on("mouseup", function() {
-      drag = null
-    })
-    sel.on("mousemove", function() {
+
+    d3.select("body").on("mouseup", function() { drag = null })
+    d3.select("body").on("mousemove", function() {
       if (drag) {
         let dx = d3.mouse(sel.node())[0] - drag.x
-        proj3AngleY = drag.rot + dx * 0.03
+        proj3AngleY = drag.rot + dx * 0.01
         redrawAxis()
         drawData()
       }
